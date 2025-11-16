@@ -1,0 +1,325 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// USER & AUTHENTICATION
+// ============================================
+
+enum UserRole {
+  ADMIN
+  FORM_CREATOR
+  SUBMITTER
+  APPROVER
+  AUDITOR
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  passwordHash  String
+  firstName     String?
+  lastName      String?
+  roles         UserRole[]
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  createdForms      Form[]            @relation("FormCreator")
+  submissions       FormSubmission[]
+  workflowApprovals Approval[]
+  auditLogs         AuditLog[]
+
+  @@index([email])
+  @@index([isActive])
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+// ============================================
+// FORMS
+// ============================================
+
+enum FormStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum FieldType {
+  TEXT
+  TEXTAREA
+  NUMBER
+  EMAIL
+  PHONE
+  DATE
+  DATETIME
+  SELECT
+  MULTISELECT
+  CHECKBOX
+  RADIO
+  FILE_UPLOAD
+  SIGNATURE
+}
+
+model Form {
+  id          String     @id @default(cuid())
+  title       String
+  description String?
+  status      FormStatus @default(DRAFT)
+  creatorId   String
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  publishedAt DateTime?
+
+  // Permissions (JSON structure for flexible permission model)
+  // { canBuild: [userId, ...], canSubmit: [userId, ...], canView: [userId, ...] }
+  permissions Json?
+
+  // Relations
+  creator     User            @relation("FormCreator", fields: [creatorId], references: [id])
+  fields      FormField[]
+  submissions FormSubmission[]
+  workflow    Workflow?
+
+  @@index([creatorId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model FormField {
+  id          String     @id @default(cuid())
+  formId      String
+  type        FieldType
+  label       String
+  placeholder String?
+  required    Boolean    @default(false)
+  order       Int        @default(0)
+
+  // Field-specific configuration (JSON)
+  // For SELECT/MULTISELECT: { options: [{ label: "...", value: "..." }] }
+  // For NUMBER: { min: 0, max: 100, step: 1 }
+  // For FILE_UPLOAD: { maxSize: 5242880, allowedTypes: ["pdf", "jpg"] }
+  config Json?
+
+  // Display logic (Release 1: single trigger field)
+  // { triggerFieldId: "...", triggerValue: "...", operator: "equals" }
+  displayLogic Json?
+
+  // Private field flag (only visible to form creator/admins)
+  isPrivate Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  form Form @relation(fields: [formId], references: [id], onDelete: Cascade)
+
+  @@index([formId])
+  @@index([order])
+}
+
+// ============================================
+// SUBMISSIONS
+// ============================================
+
+enum SubmissionStatus {
+  DRAFT
+  SUBMITTED
+  APPROVED
+  DECLINED
+  REJECTED
+  ARCHIVED
+}
+
+model FormSubmission {
+  id        String           @id @default(cuid())
+  formId    String
+  submitterId String
+  status    SubmissionStatus @default(DRAFT)
+
+  // Submission data (JSON structure matching form fields)
+  // { fieldId: value, fieldId: value, ... }
+  data Json
+
+  // Metadata
+  submittedAt DateTime?
+  completedAt DateTime?
+  archivedAt  DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  form      Form      @relation(fields: [formId], references: [id], onDelete: Cascade)
+  submitter User      @relation(fields: [submitterId], references: [id])
+  workflow  WorkflowInstance?
+  auditLogs AuditLog[]
+
+  @@index([formId])
+  @@index([submitterId])
+  @@index([status])
+  @@index([submittedAt])
+}
+
+// ============================================
+// WORKFLOWS
+// ============================================
+
+enum WorkflowType {
+  SEQUENTIAL      // One stage after another
+  PARALLEL        // All stages at once
+  ALL_MUST_APPROVE // All approvers in a stage must approve
+}
+
+enum StageType {
+  SEQUENTIAL
+  PARALLEL
+  ALL_MUST_APPROVE
+}
+
+model Workflow {
+  id        String   @id @default(cuid())
+  formId   String   @unique
+  type      WorkflowType @default(SEQUENTIAL)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  form            Form              @relation(fields: [formId], references: [id], onDelete: Cascade)
+  stages          WorkflowStage[]
+  instances       WorkflowInstance[]
+}
+
+model WorkflowStage {
+  id        String    @id @default(cuid())
+  workflowId String
+  order     Int       @default(0)
+  name      String?
+  type      StageType @default(SEQUENTIAL)
+
+  // Approver IDs (JSON array of userIds)
+  approverIds Json
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  workflow Workflow @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  approvals Approval[]
+
+  @@index([workflowId])
+  @@index([order])
+}
+
+model WorkflowInstance {
+  id             String   @id @default(cuid())
+  workflowId     String
+  submissionId   String   @unique
+  currentStageId String?
+  status         String   @default("IN_PROGRESS") // IN_PROGRESS, COMPLETED, REJECTED
+  startedAt      DateTime @default(now())
+  completedAt    DateTime?
+
+  workflow   Workflow   @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  submission FormSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  approvals  Approval[]
+
+  @@index([workflowId])
+  @@index([submissionId])
+  @@index([status])
+}
+
+// ============================================
+// APPROVALS
+// ============================================
+
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  DECLINED
+  REJECTED
+}
+
+model Approval {
+  id              String          @id @default(cuid())
+  instanceId      String
+  stageId         String
+  approverId      String
+  status          ApprovalStatus @default(PENDING)
+  comments        String?
+  declinedReason  String?
+  approvedAt      DateTime?
+  declinedAt      DateTime?
+  rejectedAt      DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  instance WorkflowInstance @relation(fields: [instanceId], references: [id], onDelete: Cascade)
+  stage    WorkflowStage    @relation(fields: [stageId], references: [id])
+  approver User             @relation(fields: [approverId], references: [id])
+
+  @@index([instanceId])
+  @@index([stageId])
+  @@index([approverId])
+  @@index([status])
+}
+
+// ============================================
+// AUDIT & COMPLIANCE
+// ============================================
+
+enum AuditAction {
+  FORM_CREATED
+  FORM_UPDATED
+  FORM_PUBLISHED
+  FORM_ARCHIVED
+  SUBMISSION_CREATED
+  SUBMISSION_SUBMITTED
+  SUBMISSION_APPROVED
+  SUBMISSION_DECLINED
+  SUBMISSION_REJECTED
+  SUBMISSION_ARCHIVED
+  WORKFLOW_CREATED
+  WORKFLOW_UPDATED
+  APPROVAL_ACTION
+  PERMISSION_CHANGED
+  DATA_EXPORTED
+}
+
+model AuditLog {
+  id        String      @id @default(cuid())
+  userId    String?
+  action    AuditAction
+  entityType String    // "Form", "Submission", "Workflow", etc.
+  entityId  String?
+  metadata  Json?      // Additional context (IP address, user agent, etc.)
+  createdAt DateTime    @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([action])
+  @@index([entityType, entityId])
+  @@index([createdAt])
+}
+
