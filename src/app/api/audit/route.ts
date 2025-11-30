@@ -4,6 +4,7 @@ import { requireAuth } from '@/lib/auth'
 import { auditQuerySchema } from '@/lib/validation'
 import { handleError, ForbiddenError } from '@/lib/errors'
 import { canViewAuditLogs } from '@/lib/permissions'
+import { AuditAction } from '@prisma/client'
 
 export async function GET(request: NextRequest) {
   try {
@@ -27,6 +28,7 @@ export async function GET(request: NextRequest) {
 
     const result = await AuditService.getLogs({
       ...filters,
+      action: filters.action as AuditAction | undefined,
       startDate: filters.startDate ? new Date(filters.startDate) : undefined,
       endDate: filters.endDate ? new Date(filters.endDate) : undefined,
     })
