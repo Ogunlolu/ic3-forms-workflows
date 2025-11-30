@@ -1,6 +1,6 @@
 import { prisma } from '@/lib/prisma'
 import { User, Form, FormSubmission } from '@prisma/client'
-import { checkFormPermission, checkSubmissionPermission, FormPermissions } from '@/lib/permissions'
+import { checkFormPermission, FormPermissions } from '@/lib/permissions'
 import { ForbiddenError } from '@/lib/errors'
 
 export class PermissionService {

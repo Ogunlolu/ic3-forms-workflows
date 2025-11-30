@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { FormService } from '@/services/FormService'
-import { PermissionService } from '@/services/PermissionService'
 import { requireAuth } from '@/lib/auth'
 import { permissionsSchema } from '@/lib/validation'
 import { handleError, ForbiddenError } from '@/lib/errors'

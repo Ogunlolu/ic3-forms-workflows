@@ -1,9 +1,8 @@
 import { prisma } from '@/lib/prisma'
-import { SubmissionStatus, FormStatus } from '@prisma/client'
+import { SubmissionStatus } from '@prisma/client'
 import { NotFoundError, ValidationError, ForbiddenError } from '@/lib/errors'
 import { AuditService } from './AuditService'
 import { WorkflowService } from './WorkflowService'
-import type { FormSubmissionWithDetails } from '@/types/form'
 
 export class SubmissionService {
   static async createSubmission(

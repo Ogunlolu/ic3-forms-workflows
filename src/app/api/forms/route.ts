@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { FormService } from '@/services/FormService'
 import { PermissionService } from '@/services/PermissionService'
 import { requireAuth } from '@/lib/auth'
-import { createFormSchema, paginationSchema } from '@/lib/validation'
+import { createFormSchema } from '@/lib/validation'
 import { handleError } from '@/lib/errors'
 
 export async function GET(request: NextRequest) {

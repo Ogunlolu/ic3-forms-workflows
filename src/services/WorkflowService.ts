@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma'
-import { WorkflowType, StageType, ApprovalStatus } from '@prisma/client'
+import { WorkflowType, StageType } from '@prisma/client'
 import { NotFoundError, ConflictError, ValidationError } from '@/lib/errors'
 import { AuditService } from './AuditService'
 import { NotificationService } from './NotificationService'
@@ -94,7 +94,7 @@ export class WorkflowService {
     },
     userId: string
   ) {
-    const workflow = await this.getWorkflow(id)
+    await this.getWorkflow(id)
 
     // If updating stages, validate approvers
     if (data.stages) {

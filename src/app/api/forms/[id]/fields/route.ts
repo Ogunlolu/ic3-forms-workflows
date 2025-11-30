@@ -3,7 +3,7 @@ import { FormService } from '@/services/FormService'
 import { PermissionService } from '@/services/PermissionService'
 import { requireAuth } from '@/lib/auth'
 import { createFieldSchema, reorderFieldsSchema } from '@/lib/validation'
-import { handleError, ForbiddenError } from '@/lib/errors'
+import { handleError } from '@/lib/errors'
 
 export async function POST(
   request: NextRequest,

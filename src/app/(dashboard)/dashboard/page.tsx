@@ -50,7 +50,7 @@ export default function DashboardPage() {
           <Card>
             <CardHeader>
               <CardTitle>My Forms</CardTitle>
-              <CardDescription>Forms you've created</CardDescription>
+              <CardDescription>Forms you&apos;ve created</CardDescription>
             </CardHeader>
             <CardContent>
               {formsLoading ? (
@@ -74,7 +74,7 @@ export default function DashboardPage() {
           <Card>
             <CardHeader>
               <CardTitle>My Submissions</CardTitle>
-              <CardDescription>Forms you've submitted</CardDescription>
+              <CardDescription>Forms you&apos;ve submitted</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">0</div>

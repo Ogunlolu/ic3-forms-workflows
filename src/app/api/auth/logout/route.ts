@@ -1,11 +1,11 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { deleteSession, clearSessionCookie } from '@/lib/auth'
 import { handleError } from '@/lib/errors'
 
 const SESSION_COOKIE_NAME = 'ic3_session_token'
 
-export async function POST(request: NextRequest) {
+export async function POST() {
   try {
     const cookieStore = await cookies()
     const token = cookieStore.get(SESSION_COOKIE_NAME)?.value

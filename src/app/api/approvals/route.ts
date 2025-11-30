@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuth } from '@/lib/auth'
-import { paginationSchema } from '@/lib/validation'
 import { handleError } from '@/lib/errors'
 
 export async function GET(request: NextRequest) {

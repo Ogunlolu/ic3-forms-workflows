@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { SubmissionService } from '@/services/SubmissionService'
-import { PermissionService } from '@/services/PermissionService'
 import { requireAuth } from '@/lib/auth'
-import { createSubmissionSchema, paginationSchema } from '@/lib/validation'
+import { createSubmissionSchema } from '@/lib/validation'
 import { handleError } from '@/lib/errors'
 
 export async function GET(request: NextRequest) {

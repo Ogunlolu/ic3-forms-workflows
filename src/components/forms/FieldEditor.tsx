@@ -5,10 +5,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Label } from '@/components/ui/Label'
-import { Textarea } from '@/components/ui/Textarea'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/Select'
 import type { FormField } from '@/types/form'
-import { FieldType } from '@prisma/client'
 
 interface FieldEditorProps {
   field: FormField
@@ -38,7 +35,6 @@ export function FieldEditor({ field, onUpdate }: FieldEditorProps) {
   }
 
   const needsOptions = field.type === 'SELECT' || field.type === 'MULTISELECT' || field.type === 'RADIO'
-  const config = field.config as any
 
   return (
     <Card>

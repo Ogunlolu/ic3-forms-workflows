@@ -113,7 +113,7 @@ export class NotificationService {
 
   static async notifySubmitter(
     submissionId: string,
-    action: 'approved' | 'declined' | 'rejected'
+    _action: 'approved' | 'declined' | 'rejected'
   ): Promise<void> {
     const submission = await prisma.formSubmission.findUnique({
       where: { id: submissionId },

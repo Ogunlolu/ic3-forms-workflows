@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { WorkflowService } from '@/services/WorkflowService'
-import { PermissionService } from '@/services/PermissionService'
 import { requireAuth } from '@/lib/auth'
 import { createWorkflowSchema } from '@/lib/validation'
 import { handleError, ForbiddenError } from '@/lib/errors'

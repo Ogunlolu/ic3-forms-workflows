@@ -2,7 +2,7 @@ import { prisma } from '@/lib/prisma'
 import { FormStatus, FieldType } from '@prisma/client'
 import { NotFoundError, ConflictError, ValidationError } from '@/lib/errors'
 import { AuditService } from './AuditService'
-import type { FormWithFields, FormField } from '@/types/form'
+import type { FormField } from '@/types/form'
 
 export class FormService {
   static async createForm(userId: string, data: { title: string; description?: string }) {
