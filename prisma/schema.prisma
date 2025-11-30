@@ -23,21 +23,22 @@ enum UserRole {
 }
 
 model User {
-  id            String    @id @default(cuid())
-  email         String    @unique
-  passwordHash  String
-  firstName     String?
-  lastName      String?
-  roles         UserRole[]
-  isActive      Boolean   @default(true)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id           String     @id @default(cuid())
+  email        String     @unique
+  passwordHash String
+  firstName    String?
+  lastName     String?
+  roles        UserRole[]
+  isActive     Boolean    @default(true)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
 
   // Relations
-  createdForms      Form[]            @relation("FormCreator")
+  createdForms      Form[]           @relation("FormCreator")
   submissions       FormSubmission[]
   workflowApprovals Approval[]
   auditLogs         AuditLog[]
+  sessions          Session[]
 
   @@index([email])
   @@index([isActive])
@@ -98,7 +99,7 @@ model Form {
   permissions Json?
 
   // Relations
-  creator     User            @relation("FormCreator", fields: [creatorId], references: [id])
+  creator     User             @relation("FormCreator", fields: [creatorId], references: [id])
   fields      FormField[]
   submissions FormSubmission[]
   workflow    Workflow?
@@ -109,13 +110,13 @@ model Form {
 }
 
 model FormField {
-  id          String     @id @default(cuid())
+  id          String    @id @default(cuid())
   formId      String
   type        FieldType
   label       String
   placeholder String?
-  required    Boolean    @default(false)
-  order       Int        @default(0)
+  required    Boolean   @default(false)
+  order       Int       @default(0)
 
   // Field-specific configuration (JSON)
   // For SELECT/MULTISELECT: { options: [{ label: "...", value: "..." }] }
@@ -153,10 +154,10 @@ enum SubmissionStatus {
 }
 
 model FormSubmission {
-  id        String           @id @default(cuid())
-  formId    String
+  id          String           @id @default(cuid())
+  formId      String
   submitterId String
-  status    SubmissionStatus @default(DRAFT)
+  status      SubmissionStatus @default(DRAFT)
 
   // Submission data (JSON structure matching form fields)
   // { fieldId: value, fieldId: value, ... }
@@ -171,8 +172,8 @@ model FormSubmission {
   updatedAt DateTime @updatedAt
 
   // Relations
-  form      Form      @relation(fields: [formId], references: [id], onDelete: Cascade)
-  submitter User      @relation(fields: [submitterId], references: [id])
+  form      Form              @relation(fields: [formId], references: [id], onDelete: Cascade)
+  submitter User              @relation(fields: [submitterId], references: [id])
   workflow  WorkflowInstance?
   auditLogs AuditLog[]
 
@@ -187,8 +188,8 @@ model FormSubmission {
 // ============================================
 
 enum WorkflowType {
-  SEQUENTIAL      // One stage after another
-  PARALLEL        // All stages at once
+  SEQUENTIAL // One stage after another
+  PARALLEL // All stages at once
   ALL_MUST_APPROVE // All approvers in a stage must approve
 }
 
@@ -199,23 +200,23 @@ enum StageType {
 }
 
 model Workflow {
-  id        String   @id @default(cuid())
-  formId   String   @unique
+  id        String       @id @default(cuid())
+  formId    String       @unique
   type      WorkflowType @default(SEQUENTIAL)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
 
-  form            Form              @relation(fields: [formId], references: [id], onDelete: Cascade)
-  stages          WorkflowStage[]
-  instances       WorkflowInstance[]
+  form      Form               @relation(fields: [formId], references: [id], onDelete: Cascade)
+  stages    WorkflowStage[]
+  instances WorkflowInstance[]
 }
 
 model WorkflowStage {
-  id        String    @id @default(cuid())
+  id         String    @id @default(cuid())
   workflowId String
-  order     Int       @default(0)
-  name      String?
-  type      StageType @default(SEQUENTIAL)
+  order      Int       @default(0)
+  name       String?
+  type       StageType @default(SEQUENTIAL)
 
   // Approver IDs (JSON array of userIds)
   approverIds Json
@@ -223,7 +224,7 @@ model WorkflowStage {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  workflow Workflow @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  workflow  Workflow   @relation(fields: [workflowId], references: [id], onDelete: Cascade)
   approvals Approval[]
 
   @@index([workflowId])
@@ -231,15 +232,15 @@ model WorkflowStage {
 }
 
 model WorkflowInstance {
-  id             String   @id @default(cuid())
+  id             String    @id @default(cuid())
   workflowId     String
-  submissionId   String   @unique
+  submissionId   String    @unique
   currentStageId String?
-  status         String   @default("IN_PROGRESS") // IN_PROGRESS, COMPLETED, REJECTED
-  startedAt      DateTime @default(now())
+  status         String    @default("IN_PROGRESS") // IN_PROGRESS, COMPLETED, REJECTED
+  startedAt      DateTime  @default(now())
   completedAt    DateTime?
 
-  workflow   Workflow   @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  workflow   Workflow       @relation(fields: [workflowId], references: [id], onDelete: Cascade)
   submission FormSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
   approvals  Approval[]
 
@@ -260,16 +261,16 @@ enum ApprovalStatus {
 }
 
 model Approval {
-  id              String          @id @default(cuid())
-  instanceId      String
-  stageId         String
-  approverId      String
-  status          ApprovalStatus @default(PENDING)
-  comments        String?
-  declinedReason  String?
-  approvedAt      DateTime?
-  declinedAt      DateTime?
-  rejectedAt      DateTime?
+  id             String         @id @default(cuid())
+  instanceId     String
+  stageId        String
+  approverId     String
+  status         ApprovalStatus @default(PENDING)
+  comments       String?
+  declinedReason String?
+  approvedAt     DateTime?
+  declinedAt     DateTime?
+  rejectedAt     DateTime?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -307,19 +308,21 @@ enum AuditAction {
 }
 
 model AuditLog {
-  id        String      @id @default(cuid())
-  userId    String?
-  action    AuditAction
-  entityType String    // "Form", "Submission", "Workflow", etc.
-  entityId  String?
-  metadata  Json?      // Additional context (IP address, user agent, etc.)
-  createdAt DateTime    @default(now())
+  id           String      @id @default(cuid())
+  userId       String?
+  action       AuditAction
+  entityType   String // "Form", "Submission", "Workflow", etc.
+  entityId     String?
+  submissionId String?
+  metadata     Json? // Additional context (IP address, user agent, etc.)
+  createdAt    DateTime    @default(now())
 
-  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+  user       User?           @relation(fields: [userId], references: [id], onDelete: SetNull)
+  submission FormSubmission? @relation(fields: [submissionId], references: [id], onDelete: SetNull)
 
   @@index([userId])
   @@index([action])
   @@index([entityType, entityId])
+  @@index([submissionId])
   @@index([createdAt])
 }
-
