@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
     const token = await createSession(user.id)
     await setSessionCookie(token)
 
-    await AuditService.log('FORM_CREATED', 'User', user.id, user.id)
+    await AuditService.log('USER_REGISTERED', 'User', user.id, user.id)
 
     return NextResponse.json(
       {

@@ -290,6 +290,7 @@ model Approval {
 // ============================================
 
 enum AuditAction {
+  USER_REGISTERED
   FORM_CREATED
   FORM_UPDATED
   FORM_PUBLISHED
